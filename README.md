@@ -22,7 +22,7 @@ Simulador inteligente de orçamento e previsão de gastos em cloud baseado em bo
 
 ```bash
 git clone https://github.com/gfbarros78/finops-predict.git
-cd finops-predict
+cd finops-predict-pro
 ```
 
 2. Instale as dependências:
