@@ -21,7 +21,7 @@ Simulador inteligente de orçamento e previsão de gastos em cloud baseado em bo
 1. Clone o repositório:
 
 ```bash
-git clone https://github.com/seu-usuario/finops-predict.git
+git clone https://github.com/gfbarros78/finops-predict.git
 cd finops-predict
 ```
 
@@ -43,7 +43,7 @@ streamlit run app.py
 
 Acesse a versão online (caso publicada):
 
-👉 [Abrir FinOpsPredict Pro no Streamlit](https://seu-usuario-finops-predict.streamlit.app)
+👉 [Abrir FinOpsPredict Pro no Streamlit](https://finops-predict-gfbarros.streamlit.app/)
 
 ---
 
