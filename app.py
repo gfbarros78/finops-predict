@@ -10,7 +10,8 @@ st.title("📊 Previsão Orçamentária em Cloud - FinOps Predict")
 # --- INPUT DE BASELINE ---
 baseline = st.number_input("Baseline em R$", min_value=0.0, step=100.0, format="%.2f")
 
-# Exibe valor formatado\if baseline:
+# Exibe valor formatado
+if baseline:
     st.markdown(f"**Valor inserido:** {format_currency(baseline, 'BRL', locale='pt_BR')}")
 
 # --- DADOS DO PROJETO ---
@@ -61,3 +62,4 @@ if st.button("Executar Simulação"):
 
     total = sum(valores)
     st.markdown(f"### 💰 Total estimado para 12 meses: {format_currency(total, 'BRL', locale='pt_BR')}")
+    st.caption("Desenvolvido com ❤️ seguindo as práticas FinOps.")
