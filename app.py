@@ -33,4 +33,44 @@ for i in range(num_projects):
     start_month_proj = st.sidebar.selectbox(f"Mês de Início - Projeto {i+1}", list(range(1, 13)), index=2, key=f"start_month_{i}")
     start_year_proj = st.sidebar.number_input(f"Ano de Início - Projeto {i+1}", value=2025, step=1, key=f"start_year_{i}")
     end_month_proj = st.sidebar.selectbox(f"Mês de Fim - Projeto {i+1}", list(range(1, 13)), index=5, key=f"end_month_{i}")
-    end_year_proj = st.sidebar.number_input(f"Ano de Fi_
+    end_year_proj = st.sidebar.number_input(f"Ano de Fim - Projeto {i+1}", value=2025, step=1, key=f"end_year_{i}")
+
+    if cost > 0:
+        cost_formatado = f"R$ {cost:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
+        st.sidebar.markdown(f"Valor inserido: **{cost_formatado}**")
+
+    project_list.append({
+        "name": name,
+        "monthly_cost": cost,
+        "start_month": start_month_proj,
+        "start_year": start_year_proj,
+        "end_month": end_month_proj,
+        "end_year": end_year_proj
+    })
+
+# Simulação
+if st.sidebar.button("Simular Orçamento"):
+    df = simulate_budget(
+        baseline_cost=baseline_value,
+        monthly_growth_rate=monthly_growth_rate,
+        start_month=start_month,
+        start_year=start_year,
+        duration_months=duration_months,
+        projects=project_list
+    )
+
+    st.subheader("📊 Resultado da Simulação")
+    st.dataframe(df, use_container_width=True)
+
+    st.download_button(
+        label="⬇️ Exportar CSV",
+        data=export_to_csv(df),
+        file_name="orcamento_cloud.csv",
+        mime="text/csv"
+    )
+
+    st.plotly_chart(plot_budget_line_chart(df), use_container_width=True)
+    st.plotly_chart(plot_budget_pie_chart(df), use_container_width=True)
+else:
+    st.info("Preencha os dados ao lado e clique em 'Simular Orçamento'.")
+    st.caption("Desenvolvido com ❤️ seguindo as práticas FinOps.")
