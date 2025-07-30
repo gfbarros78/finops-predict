@@ -23,7 +23,8 @@ scenario = st.sidebar.selectbox("Cenário", ["Crescimento Vegetativo", "Novo Pro
 start_month = st.sidebar.selectbox("Mês de Início", list(range(1, 13)), index=0)
 start_year = st.sidebar.number_input("Ano de Início", value=2025, step=1)
 
-monthly_cost = st.sidebar.number_input("Custo Inicial Mensal (R$)", value=10000.0, step=1000.0)
+# Valor inicial ajustado para 0,00
+monthly_cost = st.sidebar.number_input("Custo Inicial Mensal (R$)", value=0.0, step=1000.0, format="%.2f")
 if monthly_cost > 0:
     custo_formatado = f"R$ {monthly_cost:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
     st.sidebar.markdown(f"Valor inserido: **{custo_formatado}**")
