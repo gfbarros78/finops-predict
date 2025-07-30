@@ -44,3 +44,4 @@ if st.sidebar.button("Simular Orçamento"):
     st.plotly_chart(plot_budget_pie_chart(df), use_container_width=True)
 else:
     st.info("Preencha os dados ao lado e clique em 'Simular Orçamento'.")
+    st.caption("Desenvolvido com ❤️ seguindo as práticas FinOps.")
