@@ -7,11 +7,14 @@ import pandas as pd
 import locale
 import calendar
 
-# Define local para português brasileiro
-locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+# Define local para português brasileiro com fallback
+try:
+    locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+except locale.Error:
+    locale.setlocale(locale.LC_ALL, '')  # fallback para o locale padrão do sistema
 
 st.set_page_config(page_title="FinOpsPredict Pro", layout="wide")
-st.title("Ὃ0 FinOpsPredict Pro - Planejamento Orçamentário em Cloud")
+st.title("💰 FinOpsPredict Pro - Planejamento Orçamentário em Cloud")
 
 # Sidebar - Entrada de dados
 st.sidebar.header("📌 Dados do Projeto")
