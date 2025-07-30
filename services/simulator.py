@@ -1,25 +1,49 @@
 # services/simulator.py
-import pandas as pd
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
 
-def simulate_budget(project_name, scenario, start_month, start_year, monthly_cost, growth_rate, duration_months):
-    data = []
+import pandas as pd
+from dateutil.relativedelta import relativedelta
+from datetime import datetime
+
+
+def simulate_budget(
+    project_name: str,
+    scenario: str,
+    start_month: int,
+    start_year: int,
+    baseline_cost: float,
+    monthly_growth_rate: float,
+    duration_months: int,
+    project_cost: float = 0.0,
+    project_month: int = None,
+    project_year: int = None
+) -> pd.DataFrame:
+    
     start_date = datetime(start_year, start_month, 1)
-    cost = monthly_cost
+    data = []
 
     for i in range(duration_months):
-        date = start_date + relativedelta(months=i)
-        data.append({
-            "Projeto": project_name,
-            "Ano": date.year,
-            "Mês": date.strftime("%B"),
-            "Data": date.strftime("%Y-%m"),
-            "Custo Previsto (R$)": round(cost, 2)
-        })
+        current_date = start_date + relativedelta(months=i)
+        mes = current_date.strftime("%B").capitalize()
+        data_mes = current_date.strftime("%m-%Y")
 
-        # Crescimento positivo ou negativo
-        cost *= (1 + growth_rate / 100)
+        # Aplica crescimento ao baseline
+        if i == 0:
+            forecast_cost = baseline_cost
+        else:
+            forecast_cost *= (1 + monthly_growth_rate / 100)
+
+        # Verifica se é o mês de entrada do projeto
+        if project_month and project_year:
+            if current_date.month >= project_month and current_date.year >= project_year:
+                forecast_cost += project_cost
+
+        data.append({
+            "Mês": mes,
+            "Data": data_mes,
+            "Cenário": scenario,
+            "Projeto": project_name,
+            "Custo Previsto (R$)": round(forecast_cost, 2)
+        })
 
     df = pd.DataFrame(data)
     return df
