@@ -6,74 +6,53 @@ from utils.charts import plot_budget_line_chart, plot_budget_pie_chart
 import pandas as pd
 
 st.set_page_config(page_title="FinOpsPredict Pro", layout="wide")
-st.title("💰 FinOpsPredict Pro - Planejamento Orçamentário em Cloud")
+st.title("\U0001F4B0 FinOpsPredict Pro - Planejamento Orçamentário em Cloud")
 
-# Sidebar - Parâmetros do Forecast
-st.sidebar.header("🔧 Parâmetros do Forecast")
-baseline_value = st.sidebar.number_input("Baseline em R$", min_value=0.0, step=100.0, value=0.0, format="%.2f")
-if baseline_value > 0:
-    baseline_formatado = f"R$ {baseline_value:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
-    st.sidebar.markdown(f"Valor inserido: **{baseline_formatado}**")
+# Sidebar - Entrada de dados
+st.sidebar.header("\U0001F527 Parâmetros do Forecast")
+baseline_value = st.sidebar.number_input("Baseline em R$", min_value=0.0, value=0.00, step=100.0, format="%.2f")
+if baseline_value:
+    st.sidebar.markdown(f"**Valor inserido:** R$ {baseline_value:,.2f}".replace(",", "v").replace(".", ",").replace("v", "."))
+else:
+    st.sidebar.markdown("**Valor inserido:**")
 
-start_month = st.sidebar.selectbox("Mês de Início do Forecast", list(range(1, 13)), index=0)
-start_year = st.sidebar.number_input("Ano de Início do Forecast", value=2025, step=1)
-growth_rate_total = st.sidebar.slider("Crescimento ou Redução (%) ao ano", -50, 50, 5)
-duration_months = st.sidebar.slider("Duração (meses)", 3, 60, 12)
-monthly_growth_rate = round(growth_rate_total / 12, 4)
+st.sidebar.header("\U0001F4CC Dados do Projeto")
+project_name = st.sidebar.text_input("Nome do Projeto", "Projeto X")
+scenario = st.sidebar.selectbox("Cenário", ["Crescimento Vegetativo", "Novo Projeto", "Otimização de Custos"])
+start_month = st.sidebar.selectbox("Mês de Início", list(range(1, 13)), index=0)
+start_year = st.sidebar.number_input("Ano de Início", value=2025, step=1)
+end_month = st.sidebar.selectbox("Mês de Fim", list(range(1, 13)), index=11)
+end_year = st.sidebar.number_input("Ano de Fim", value=2025, step=1)
+monthly_cost = st.sidebar.number_input("Custo Inicial Mensal (R$)", min_value=0.0, value=0.00, step=100.0, format="%.2f")
+if monthly_cost:
+    st.sidebar.markdown(f"**Valor inserido:** R$ {monthly_cost:,.2f}".replace(",", "v").replace(".", ",").replace("v", "."))
+else:
+    st.sidebar.markdown("**Valor inserido:**")
 
-# Sidebar - Projetos
-st.sidebar.header("📌 Dados dos Projetos")
-num_projects = st.sidebar.selectbox("Quantos projetos deseja incluir?", [1, 2, 3])
-
-project_list = []
-for i in range(num_projects):
-    st.sidebar.subheader(f"Projeto {i+1}")
-    name = st.sidebar.text_input(f"Nome do Projeto {i+1}", f"Projeto {i+1}")
-    cost = st.sidebar.number_input(f"Custo Mensal (R$) - Projeto {i+1}", value=0.0, step=1000.0, format="%.2f")
-    start_month_proj = st.sidebar.selectbox(f"Mês de Início - Projeto {i+1}", list(range(1, 13)), index=2, key=f"start_month_{i}")
-    start_year_proj = st.sidebar.number_input(f"Ano de Início - Projeto {i+1}", value=2025, step=1, key=f"start_year_{i}")
-    end_month_proj = st.sidebar.selectbox(f"Mês de Fim - Projeto {i+1}", list(range(1, 13)), index=5, key=f"end_month_{i}")
-    end_year_proj = st.sidebar.number_input(f"Ano de Fim - Projeto {i+1}", value=2025, step=1, key=f"end_year_{i}")
-
-    if cost > 0:
-        cost_formatado = f"R$ {cost:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
-        st.sidebar.markdown(f"Valor inserido: **{cost_formatado}**")
-
-    project_list.append({
-        "name": name,
-        "monthly_cost": cost,
-        "start_month": start_month_proj,
-        "start_year": start_year_proj,
-        "end_month": end_month_proj,
-        "end_year": end_year_proj
-    })
+growth_rate = st.sidebar.slider("Crescimento ou Redução (%) total no período", -100, 100, 12)
 
 # Simulação
+df = None
 if st.sidebar.button("Simular Orçamento"):
     df = simulate_budget(
-        baseline_cost=baseline_value,
-        monthly_growth_rate=monthly_growth_rate,
-        start_month=start_month,
-        start_year=start_year,
-        duration_months=duration_months,
-        projects=project_list
+        project_name,
+        scenario,
+        start_month,
+        start_year,
+        baseline_value,
+        growth_rate,
+        end_month,
+        end_year
     )
 
-    # 🔧 Tradução manual dos meses
-    meses_pt = {
-        "January": "Janeiro", "February": "Fevereiro", "March": "Março",
-        "April": "Abril", "May": "Maio", "June": "Junho",
-        "July": "Julho", "August": "Agosto", "September": "Setembro",
-        "October": "Outubro", "November": "Novembro", "December": "Dezembro"
-    }
+    st.subheader("\U0001F4CA Resultado da Simulação")
 
+    # Formatar dados para exibição
     df_exibicao = df.copy()
-    df_exibicao["Custo Previsto (R$)"] = df_exibicao["Custo Previsto (R$)"].apply(
-        lambda x: f"R$ {x:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
-    )
-    df_exibicao["Mês"] = pd.to_datetime(df_exibicao["Data"], format="%m-%Y").dt.month_name().map(meses_pt)
+    df_exibicao["Mês"] = pd.to_datetime(df_exibicao["Data"], format="%m-%Y").dt.strftime("%B").str.capitalize()
+    df_exibicao["Custo Previsto (R$)"] = df_exibicao["Custo Previsto (R$)"].apply(lambda x: f"R$ {x:,.2f}".replace(",", "v").replace(".", ",").replace("v", "."))
+    df_exibicao = df_exibicao[["Data", "Mês", "Custo Previsto (R$)", "Projeto"]]
 
-    st.subheader("📊 Resultado da Simulação")
     st.dataframe(df_exibicao, use_container_width=True)
 
     st.download_button(
@@ -84,8 +63,10 @@ if st.sidebar.button("Simular Orçamento"):
     )
 
     st.plotly_chart(plot_budget_line_chart(df), use_container_width=True)
-    st.plotly_chart(plot_budget_pie_chart(df), use_container_width=True)
 
+    pie_chart = plot_budget_pie_chart(df)
+    if pie_chart:
+        st.plotly_chart(pie_chart, use_container_width=True)
 else:
     st.info("Preencha os dados ao lado e clique em 'Simular Orçamento'.")
     st.caption("Desenvolvido com ❤️ seguindo as práticas FinOps.")
