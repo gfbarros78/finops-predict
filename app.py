@@ -15,54 +15,22 @@ if baseline_value > 0:
     baseline_formatado = f"R$ {baseline_value:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
     st.sidebar.markdown(f"Valor inserido: **{baseline_formatado}**")
 
-# Sidebar - Dados do Projeto
-st.sidebar.header("📌 Dados do Projeto")
-project_name = st.sidebar.text_input("Nome do Projeto", "Projeto X")
-scenario = st.sidebar.selectbox("Cenário", ["Crescimento Vegetativo", "Novo Projeto", "Otimização de Custos"])
 start_month = st.sidebar.selectbox("Mês de Início do Forecast", list(range(1, 13)), index=0)
 start_year = st.sidebar.number_input("Ano de Início do Forecast", value=2025, step=1)
-
-project_month = st.sidebar.selectbox("Mês de Entrada do Projeto", list(range(1, 13)), index=2)
-project_year = st.sidebar.number_input("Ano de Entrada do Projeto", value=2025, step=1)
-
-project_cost = st.sidebar.number_input("Custo Mensal do Projeto (R$)", value=0.0, step=1000.0, format="%.2f")
-if project_cost > 0:
-    project_cost_formatado = f"R$ {project_cost:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
-    st.sidebar.markdown(f"Valor inserido: **{project_cost_formatado}**")
-
 growth_rate_total = st.sidebar.slider("Crescimento ou Redução (%) ao ano", -50, 50, 5)
 duration_months = st.sidebar.slider("Duração (meses)", 3, 60, 12)
-
-# Converte o crescimento anual em mensal
 monthly_growth_rate = round(growth_rate_total / 12, 4)
 
-# Simulação
-if st.sidebar.button("Simular Orçamento"):
-    df = simulate_budget(
-        project_name=project_name,
-        scenario=scenario,
-        start_month=start_month,
-        start_year=start_year,
-        baseline_cost=baseline_value,
-        monthly_growth_rate=monthly_growth_rate,
-        duration_months=duration_months,
-        project_cost=project_cost,
-        project_month=project_month,
-        project_year=project_year
-    )
+# Projetos
+st.sidebar.header("📌 Dados dos Projetos")
+num_projects = st.sidebar.selectbox("Quantos projetos deseja incluir?", [1, 2, 3])
 
-    st.subheader("📊 Resultado da Simulação")
-    st.dataframe(df, use_container_width=True)
-
-    st.download_button(
-        label="⬇️ Exportar CSV",
-        data=export_to_csv(df),
-        file_name="orcamento_cloud.csv",
-        mime="text/csv"
-    )
-
-    st.plotly_chart(plot_budget_line_chart(df), use_container_width=True)
-    st.plotly_chart(plot_budget_pie_chart(df), use_container_width=True)
-else:
-    st.info("Preencha os dados ao lado e clique em 'Simular Orçamento'.")
-    st.caption("Desenvolvido com ❤️ seguindo as práticas FinOps.")
+project_list = []
+for i in range(num_projects):
+    st.sidebar.subheader(f"Projeto {i+1}")
+    name = st.sidebar.text_input(f"Nome do Projeto {i+1}", f"Projeto {i+1}")
+    cost = st.sidebar.number_input(f"Custo Mensal (R$) - Projeto {i+1}", value=0.0, step=1000.0, format="%.2f")
+    start_month_proj = st.sidebar.selectbox(f"Mês de Início - Projeto {i+1}", list(range(1, 13)), index=2, key=f"start_month_{i}")
+    start_year_proj = st.sidebar.number_input(f"Ano de Início - Projeto {i+1}", value=2025, step=1, key=f"start_year_{i}")
+    end_month_proj = st.sidebar.selectbox(f"Mês de Fim - Projeto {i+1}", list(range(1, 13)), index=5, key=f"end_month_{i}")
+    end_year_proj = st.sidebar.number_input(f"Ano de Fi_
