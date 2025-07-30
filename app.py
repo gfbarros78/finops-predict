@@ -6,9 +6,18 @@ from utils.charts import plot_budget_line_chart, plot_budget_pie_chart
 import pandas as pd
 
 st.set_page_config(page_title="FinOpsPredict Pro", layout="wide")
-st.title("💰 FinOpsPredict - Planejamento Orçamentário em Cloud")
+st.title("💰 FinOpsPredict Pro - Planejamento Orçamentário em Cloud")
 
-# Sidebar - Entrada de dados
+# Sidebar - Parâmetros do Forecast
+st.sidebar.header("🔧 Parâmetros do Forecast")
+baseline_value = st.sidebar.number_input("Baseline em R$", min_value=0.0, step=100.0, value=0.0, format="%.2f")
+
+# Exibe valor formatado apenas se preenchido
+if baseline_value > 0:
+    baseline_formatado = f"R$ {baseline_value:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
+    st.sidebar.markdown(f"Valor inserido: **{baseline_formatado}**")
+
+# Sidebar - Dados do Projeto
 st.sidebar.header("📌 Dados do Projeto")
 project_name = st.sidebar.text_input("Nome do Projeto", "Projeto X")
 scenario = st.sidebar.selectbox("Cenário", ["Crescimento Vegetativo", "Novo Projeto", "Otimização de Custos"])
