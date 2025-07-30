@@ -48,7 +48,6 @@ for i in range(num_projects):
         "end_year": end_year_proj
     })
 
-# Simulação
 if st.sidebar.button("Simular Orçamento"):
     df = simulate_budget(
         baseline_cost=baseline_value,
@@ -59,8 +58,15 @@ if st.sidebar.button("Simular Orçamento"):
         projects=project_list
     )
 
+    # 🔧 Formatação da tabela
+    df_exibicao = df.copy()
+    df_exibicao["Custo Previsto (R$)"] = df_exibicao["Custo Previsto (R$)"].apply(
+        lambda x: f"R$ {x:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
+    )
+    df_exibicao["Mês"] = pd.to_datetime(df_exibicao["Data"], format="%m-%Y").dt.month_name(locale='pt_BR').str.capitalize()
+
     st.subheader("📊 Resultado da Simulação")
-    st.dataframe(df, use_container_width=True)
+    st.dataframe(df_exibicao, use_container_width=True)
 
     st.download_button(
         label="⬇️ Exportar CSV",
