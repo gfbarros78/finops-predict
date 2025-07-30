@@ -1,25 +1,25 @@
 # utils/charts.py
-import plotly.express as px
 
+import plotly.express as px
 
 def plot_budget_line_chart(df):
     fig = px.line(
         df,
         x="Data",
         y="Custo Previsto (R$)",
-        title="📈 Evolução Mensal do Orçamento",
+        title="Evolução do Custo Mensal Previsto",
         markers=True
     )
-    fig.update_layout(xaxis_title="Data", yaxis_title="R$", hovermode="x unified")
+    fig.update_layout(xaxis_title="Data", yaxis_title="Custo (R$)")
     return fig
 
 
 def plot_budget_pie_chart(df):
-    df_grouped = df.groupby("Projeto")["Custo Previsto (R$)"].sum().reset_index()
+    df_grouped = df.groupby("Projetos Ativos")["Custo Previsto (R$)"].sum().reset_index()
     fig = px.pie(
         df_grouped,
-        names="Projeto",
         values="Custo Previsto (R$)",
-        title="📌 Distribuição por Projeto"
+        names="Projetos Ativos",
+        title="Distribuição de Custo por Projeto Ativo"
     )
     return fig
