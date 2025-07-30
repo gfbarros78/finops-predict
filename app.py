@@ -11,7 +11,6 @@ st.title("💰 FinOpsPredict Pro - Planejamento Orçamentário em Cloud")
 # Sidebar - Parâmetros do Forecast
 st.sidebar.header("🔧 Parâmetros do Forecast")
 baseline_value = st.sidebar.number_input("Baseline em R$", min_value=0.0, step=100.0, value=0.0, format="%.2f")
-
 if baseline_value > 0:
     baseline_formatado = f"R$ {baseline_value:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
     st.sidebar.markdown(f"Valor inserido: **{baseline_formatado}**")
@@ -20,28 +19,36 @@ if baseline_value > 0:
 st.sidebar.header("📌 Dados do Projeto")
 project_name = st.sidebar.text_input("Nome do Projeto", "Projeto X")
 scenario = st.sidebar.selectbox("Cenário", ["Crescimento Vegetativo", "Novo Projeto", "Otimização de Custos"])
-start_month = st.sidebar.selectbox("Mês de Início", list(range(1, 13)), index=0)
-start_year = st.sidebar.number_input("Ano de Início", value=2025, step=1)
+start_month = st.sidebar.selectbox("Mês de Início do Forecast", list(range(1, 13)), index=0)
+start_year = st.sidebar.number_input("Ano de Início do Forecast", value=2025, step=1)
 
-# Valor inicial ajustado para 0,00
-monthly_cost = st.sidebar.number_input("Custo Inicial Mensal (R$)", value=0.0, step=1000.0, format="%.2f")
-if monthly_cost > 0:
-    custo_formatado = f"R$ {monthly_cost:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
-    st.sidebar.markdown(f"Valor inserido: **{custo_formatado}**")
+project_month = st.sidebar.selectbox("Mês de Entrada do Projeto", list(range(1, 13)), index=2)
+project_year = st.sidebar.number_input("Ano de Entrada do Projeto", value=2025, step=1)
 
-growth_rate = st.sidebar.slider("Crescimento ou Redução (%) ao mês", -50, 50, 5)
+project_cost = st.sidebar.number_input("Custo Mensal do Projeto (R$)", value=0.0, step=1000.0, format="%.2f")
+if project_cost > 0:
+    project_cost_formatado = f"R$ {project_cost:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
+    st.sidebar.markdown(f"Valor inserido: **{project_cost_formatado}**")
+
+growth_rate_total = st.sidebar.slider("Crescimento ou Redução (%) ao ano", -50, 50, 5)
 duration_months = st.sidebar.slider("Duração (meses)", 3, 60, 12)
+
+# Converte o crescimento anual em mensal
+monthly_growth_rate = round(growth_rate_total / 12, 4)
 
 # Simulação
 if st.sidebar.button("Simular Orçamento"):
     df = simulate_budget(
-        project_name,
-        scenario,
-        start_month,
-        start_year,
-        monthly_cost,
-        growth_rate,
-        duration_months
+        project_name=project_name,
+        scenario=scenario,
+        start_month=start_month,
+        start_year=start_year,
+        baseline_cost=baseline_value,
+        monthly_growth_rate=monthly_growth_rate,
+        duration_months=duration_months,
+        project_cost=project_cost,
+        project_month=project_month,
+        project_year=project_year
     )
 
     st.subheader("📊 Resultado da Simulação")
