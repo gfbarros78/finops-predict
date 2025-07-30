@@ -13,10 +13,12 @@ def simulate_budget(project_name, scenario, start_month, start_year, monthly_cos
         data.append({
             "Projeto": project_name,
             "Ano": date.year,
-            "Mes": date.month,  # Número do mês, usado no app.py
-            "Custo": round(cost, 2)
+            "Mês": date.strftime("%B"),
+            "Data": date.strftime("%Y-%m"),
+            "Custo Previsto (R$)": round(cost, 2)
         })
 
+        # Crescimento positivo ou negativo
         cost *= (1 + growth_rate / 100)
 
     df = pd.DataFrame(data)
