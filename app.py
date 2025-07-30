@@ -21,7 +21,7 @@ growth_rate_total = st.sidebar.slider("Crescimento ou Redução (%) ao ano", -50
 duration_months = st.sidebar.slider("Duração (meses)", 3, 60, 12)
 monthly_growth_rate = round(growth_rate_total / 12, 4)
 
-# Projetos
+# Sidebar - Projetos
 st.sidebar.header("📌 Dados dos Projetos")
 num_projects = st.sidebar.selectbox("Quantos projetos deseja incluir?", [1, 2, 3])
 
@@ -48,6 +48,7 @@ for i in range(num_projects):
         "end_year": end_year_proj
     })
 
+# Simulação
 if st.sidebar.button("Simular Orçamento"):
     df = simulate_budget(
         baseline_cost=baseline_value,
@@ -58,12 +59,19 @@ if st.sidebar.button("Simular Orçamento"):
         projects=project_list
     )
 
-    # 🔧 Formatação da tabela
+    # 🔧 Tradução manual dos meses
+    meses_pt = {
+        "January": "Janeiro", "February": "Fevereiro", "March": "Março",
+        "April": "Abril", "May": "Maio", "June": "Junho",
+        "July": "Julho", "August": "Agosto", "September": "Setembro",
+        "October": "Outubro", "November": "Novembro", "December": "Dezembro"
+    }
+
     df_exibicao = df.copy()
     df_exibicao["Custo Previsto (R$)"] = df_exibicao["Custo Previsto (R$)"].apply(
         lambda x: f"R$ {x:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
     )
-    df_exibicao["Mês"] = pd.to_datetime(df_exibicao["Data"], format="%m-%Y").dt.month_name(locale='pt_BR').str.capitalize()
+    df_exibicao["Mês"] = pd.to_datetime(df_exibicao["Data"], format="%m-%Y").dt.month_name().map(meses_pt)
 
     st.subheader("📊 Resultado da Simulação")
     st.dataframe(df_exibicao, use_container_width=True)
@@ -77,6 +85,7 @@ if st.sidebar.button("Simular Orçamento"):
 
     st.plotly_chart(plot_budget_line_chart(df), use_container_width=True)
     st.plotly_chart(plot_budget_pie_chart(df), use_container_width=True)
+
 else:
     st.info("Preencha os dados ao lado e clique em 'Simular Orçamento'.")
     st.caption("Desenvolvido com ❤️ seguindo as práticas FinOps.")
