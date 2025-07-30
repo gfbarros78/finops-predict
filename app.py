@@ -12,7 +12,6 @@ st.title("💰 FinOpsPredict Pro - Planejamento Orçamentário em Cloud")
 st.sidebar.header("🔧 Parâmetros do Forecast")
 baseline_value = st.sidebar.number_input("Baseline em R$", min_value=0.0, step=100.0, value=0.0, format="%.2f")
 
-# Exibe valor formatado apenas se preenchido
 if baseline_value > 0:
     baseline_formatado = f"R$ {baseline_value:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
     st.sidebar.markdown(f"Valor inserido: **{baseline_formatado}**")
@@ -23,7 +22,12 @@ project_name = st.sidebar.text_input("Nome do Projeto", "Projeto X")
 scenario = st.sidebar.selectbox("Cenário", ["Crescimento Vegetativo", "Novo Projeto", "Otimização de Custos"])
 start_month = st.sidebar.selectbox("Mês de Início", list(range(1, 13)), index=0)
 start_year = st.sidebar.number_input("Ano de Início", value=2025, step=1)
+
 monthly_cost = st.sidebar.number_input("Custo Inicial Mensal (R$)", value=10000.0, step=1000.0)
+if monthly_cost > 0:
+    custo_formatado = f"R$ {monthly_cost:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
+    st.sidebar.markdown(f"Valor inserido: **{custo_formatado}**")
+
 growth_rate = st.sidebar.slider("Crescimento ou Redução (%) ao mês", -50, 50, 5)
 duration_months = st.sidebar.slider("Duração (meses)", 3, 60, 12)
 
