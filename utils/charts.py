@@ -1,39 +1,45 @@
+# utils/charts.py
+
 import plotly.express as px
 
 def plot_budget_line_chart(df):
-    df_plot = df.groupby("Data")["Custo Previsto (R$)"].sum().reset_index()
-
-    # Formata valor para exibir no tooltip como número inteiro com separador de milhar brasileiro
-    df_plot["Custo Formatado"] = df_plot["Custo Previsto (R$)"].apply(
-        lambda x: f"R$ {int(x):,}".replace(",", "v").replace(".", ",").replace("v", ".")
-    )
-
     fig = px.line(
-        df_plot,
+        df,
         x="Data",
         y="Custo Previsto (R$)",
-        markers=True,
-        title="Evolução do Custo Mensal Previsto",
-        custom_data=["Custo Formatado"]
+        title="📈 Evolução do Custo Mensal Previsto",
+        markers=True
     )
-
-    fig.update_traces(
-        hovertemplate="Data=%{x}<br>Custo Previsto (R$)=%{customdata[0]}<extra></extra>"
-    )
-
-    fig.update_layout(yaxis_title="Custo (R$)", xaxis_title="Data")
+    fig.update_traces(hovertemplate="Mês: %{x}<br>Custo: R$ %{y:,.0f}")
     return fig
-
 
 def plot_budget_pie_chart(df):
-    df_grouped = df.groupby("Projeto")["Custo Previsto (R$)"].sum().reset_index()
+    # Verifica se 'Projetos Ativos' existe e há dados válidos
+    if "Projetos Ativos" in df.columns and df["Projetos Ativos"].notna().any():
+        # Cria cópias separadas para cada projeto em cada mês
+        expanded_rows = []
+        for _, row in df.iterrows():
+            projetos = [p.strip() for p in row["Projetos Ativos"].split(",")]
+            if projetos == ["Nenhum"]:
+                continue
+            custo_por_projeto = row["Custo Previsto (R$)"] / len(projetos)
+            for projeto in projetos:
+                expanded_rows.append({
+                    "Projeto": projeto,
+                    "Custo Previsto (R$)": custo_por_projeto
+                })
 
-    fig = px.pie(
-        df_grouped,
-        names="Projeto",
-        values="Custo Previsto (R$)",
-        title="Distribuição de Custos por Projeto"
-    )
+        df_expandido = px.data.tips()  # fallback
+        if expanded_rows:
+            df_expandido = pd.DataFrame(expanded_rows)
+            df_grouped = df_expandido.groupby("Projeto")["Custo Previsto (R$)"].sum().reset_index()
 
-    fig.update_traces(textinfo='percent+label')
-    return fig
+            fig = px.pie(
+                df_grouped,
+                names="Projeto",
+                values="Custo Previsto (R$)",
+                title="🥧 Distribuição de Custo por Projeto"
+            )
+            return fig
+    # Se não houver dados válidos para o gráfico
+    return px.pie(title="🥧 Nenhum projeto com custo registrado")
