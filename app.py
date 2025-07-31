@@ -8,6 +8,10 @@ import pandas as pd
 st.set_page_config(page_title="FinOpsPredict Pro", layout="wide")
 st.title("💰 FinOpsPredict Pro - Planejamento Orçamentário em Cloud")
 
+# Inicialização de sessão
+if "project_list" not in st.session_state:
+    st.session_state.project_list = []
+
 # Sidebar - Parâmetros do Forecast
 st.sidebar.header("🔧 Parâmetros do Forecast")
 baseline_value = st.sidebar.number_input("Baseline em R$", min_value=0.0, step=100.0, value=0.0, format="%.2f")
@@ -21,25 +25,22 @@ growth_rate_total = st.sidebar.slider("Crescimento ou Redução (%) ao ano", -50
 duration_months = st.sidebar.slider("Duração (meses)", 3, 60, 12)
 monthly_growth_rate = round(growth_rate_total / 12, 4)
 
-# Sidebar - Projetos
+# Sidebar - Dados dos Projetos
 st.sidebar.header("📌 Dados dos Projetos")
+name = st.sidebar.text_input("Nome do Projeto", "Projeto X")
+cost = st.sidebar.number_input("Custo Mensal (R$)", value=0.0, step=100.0, format="%.2f")
+if cost > 0:
+    cost_formatado = f"R$ {cost:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
+    st.sidebar.markdown(f"Valor inserido: **{cost_formatado}**")
 
-if "project_list" not in st.session_state:
-    st.session_state.project_list = []
+with st.sidebar.form(key="project_form"):
+    start_month_proj = st.selectbox("Mês de Início do Projeto", list(range(1, 13)), index=2)
+    start_year_proj = st.number_input("Ano de Início do Projeto", value=2025, step=1)
+    end_month_proj = st.selectbox("Mês de Fim do Projeto", list(range(1, 13)), index=5)
+    end_year_proj = st.number_input("Ano de Fim do Projeto", value=2025, step=1)
+    add_btn = st.form_submit_button("+ Adicionar Projeto")
 
-with st.sidebar.form(key="project_form", clear_on_submit=False):
-    name = st.text_input("Nome do Projeto", "Projeto X")
-    cost = st.number_input("Custo Mensal (R$)", min_value=0.0, step=100.0, value=0.0, format="%.2f")
-    if cost > 0:
-        cost_formatado = f"R$ {cost:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
-        st.markdown(f"Valor inserido: **{cost_formatado}**")
-    start_month_proj = st.selectbox("Mês de Início", list(range(1, 13)), index=0)
-    start_year_proj = st.number_input("Ano de Início", value=2025, step=1)
-    end_month_proj = st.selectbox("Mês de Fim", list(range(1, 13)), index=11)
-    end_year_proj = st.number_input("Ano de Fim", value=2025, step=1)
-
-    submitted = st.form_submit_button("+ Adicionar Projeto")
-    if submitted and name and cost > 0:
+    if add_btn:
         st.session_state.project_list.append({
             "name": name,
             "monthly_cost": cost,
@@ -49,17 +50,26 @@ with st.sidebar.form(key="project_form", clear_on_submit=False):
             "end_year": end_year_proj
         })
 
-# Mostrar projetos adicionados com botão para remover
+# Visualização dos Projetos Adicionados
 if st.sidebar.button("Ver Projetos Adicionados"):
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("📋 Projetos Adicionados")
+    st.sidebar.subheader("Projetos Adicionados")
+    projetos_para_remover = []
     for i, proj in enumerate(st.session_state.project_list):
-        proj_info = f"**{proj['name']}** | {proj['monthly_cost']:.2f} | {proj['start_month']}/{proj['start_year']} até {proj['end_month']}/{proj['end_year']}"
-        cols = st.sidebar.columns([5, 1])
-        cols[0].markdown(proj_info)
-        if cols[1].button("🗑️", key=f"delete_{i}"):
-            st.session_state.project_list.pop(i)
-            st.rerun()
+        col1, col2 = st.sidebar.columns([0.85, 0.15])
+        with col1:
+            st.markdown(
+                f"**{proj['name']}**  
+                Valor: R$ {proj['monthly_cost']:,.2f}  
+                Início: {proj['start_month']}/{proj['start_year']}  
+                Fim: {proj['end_month']}/{proj['end_year']}"
+                .replace(",", "v").replace(".", ",").replace("v", ".")
+            )
+        with col2:
+            if st.button("🗑️", key=f"delete_{i}"):
+                projetos_para_remover.append(i)
+
+    for i in projetos_para_remover:
+        st.session_state.project_list.pop(i)
 
 # Simulação
 if st.sidebar.button("Simular Orçamento"):
@@ -72,7 +82,7 @@ if st.sidebar.button("Simular Orçamento"):
         projects=st.session_state.project_list
     )
 
-    # 🔧 Tradução manual dos meses
+    # Tradução manual dos meses
     meses_pt = {
         "January": "Janeiro", "February": "Fevereiro", "March": "Março",
         "April": "Abril", "May": "Maio", "June": "Junho",
