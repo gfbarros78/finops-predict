@@ -1,4 +1,3 @@
-# app.py
 import streamlit as st
 from services.simulator import simulate_budget
 from utils.csv_export import export_to_csv
@@ -25,8 +24,13 @@ monthly_growth_rate = round(growth_rate_total / 12, 4)
 if "projects" not in st.session_state:
     st.session_state.projects = []
 
-if "delete_index" not in st.session_state:
-    st.session_state.delete_index = None
+# Inicializa variável para exclusão, se não existir
+if "delete_idx" not in st.session_state:
+    st.session_state.delete_idx = None
+
+# Função para deletar projeto (deve ser chamada no botão)
+def delete_project(idx):
+    st.session_state.delete_idx = idx
 
 # Sidebar - Projetos
 st.sidebar.header("📌 Dados dos Projetos")
@@ -63,18 +67,19 @@ with st.sidebar.expander("📂 Ver Projetos Adicionados"):
 📅 {proj['start_month']:02d}/{proj['start_year']} até {proj['end_month']:02d}/{proj['end_year']}"""
                 .replace(",", "v").replace(".", ",").replace("v", ".")
             )
+            # Aqui o botão chama a função via callback, não deleta direto
             if st.button("🗑️", key=f"delete_{idx}"):
-                st.session_state.delete_index = idx
+                delete_project(idx)
     else:
         st.caption("Nenhum projeto adicionado.")
 
-# Exclusão fora da renderização
-if st.session_state.delete_index is not None:
+# Exclusão fora do loop de renderização, só após o ciclo atual
+if st.session_state.delete_idx is not None:
     try:
-        del st.session_state.projects[st.session_state.delete_index]
+        del st.session_state.projects[st.session_state.delete_idx]
     except IndexError:
         pass
-    st.session_state.delete_index = None
+    st.session_state.delete_idx = None
     st.experimental_rerun()
 
 # Simulação
@@ -88,7 +93,6 @@ if st.sidebar.button("Simular Orçamento"):
         projects=st.session_state.projects
     )
 
-    # 🔧 Tradução manual dos meses
     meses_pt = {
         "January": "Janeiro", "February": "Fevereiro", "March": "Março",
         "April": "Abril", "May": "Maio", "June": "Junho",
