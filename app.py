@@ -54,12 +54,15 @@ if st.sidebar.button("Ver Projetos Adicionados"):
     st.sidebar.markdown("---")
     st.sidebar.subheader("📋 Projetos Adicionados")
     for i, proj in enumerate(st.session_state.project_list):
-        proj_info = f"**{proj['name']}** | {proj['monthly_cost']:.2f} | {proj['start_month']}/{proj['start_year']} até {proj['end_month']}/{proj['end_year']}"
+        # Formata o custo para padrão brasileiro aqui
+        custo_formatado = f"R$ {proj['monthly_cost']:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
+        proj_info = f"**{proj['name']}** | {custo_formatado} | {proj['start_month']}/{proj['start_year']} até {proj['end_month']}/{proj['end_year']}"
+        
         cols = st.sidebar.columns([5, 1])
         cols[0].markdown(proj_info)
         if cols[1].button("🗑️", key=f"delete_{i}"):
             st.session_state.project_list.pop(i)
-            st.rerun()
+            st.experimental_rerun()  # CORREÇÃO: usar experimental_rerun para recarregar a página
 
 # Simulação
 if st.sidebar.button("Simular Orçamento"):
