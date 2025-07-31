@@ -6,7 +6,7 @@ from utils.charts import plot_budget_line_chart, plot_budget_pie_chart
 import pandas as pd
 
 st.set_page_config(page_title="FinOpsPredict Pro", layout="wide")
-st.title("💰 FinOpsPredict Pro - Planejamento Orçamentário em Cloud")
+st.title("💰 FinOpsPredict - Planejamento Orçamentário em Cloud")
 
 # Sidebar - Parâmetros do Forecast
 st.sidebar.header("🔧 Parâmetros do Forecast")
