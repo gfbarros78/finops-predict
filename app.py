@@ -53,14 +53,20 @@ with st.sidebar.form(key="project_form", clear_on_submit=False):
 st.sidebar.markdown("---")
 st.sidebar.subheader("📋 Projetos Adicionados")
 if st.session_state.project_list:
+    index_to_remove = None  # variável para armazenar o índice que será removido
+
     for i, proj in enumerate(st.session_state.project_list):
         custo_formatado = f"R$ {proj['monthly_cost']:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
         proj_info = f"**{proj['name']}** | {custo_formatado} | {proj['start_month']}/{proj['start_year']} até {proj['end_month']}/{proj['end_year']}"
         cols = st.sidebar.columns([5, 1])
         cols[0].markdown(proj_info)
         if cols[1].button("🗑️", key=f"delete_{i}"):
-            st.session_state.project_list.pop(i)
-            st.experimental_rerun()  # Atualiza a página para refletir a exclusão
+            index_to_remove = i
+
+    # Remoção fora do loop
+    if index_to_remove is not None:
+        st.session_state.project_list.pop(index_to_remove)
+        st.experimental_rerun()  # Atualiza a página para refletir a exclusão
 else:
     st.sidebar.write("Nenhum projeto adicionado.")
 
