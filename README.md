@@ -1,6 +1,6 @@
 # README.md
 
-# 💰 FinOpsPredict Pro
+# 💰 FinOpsPredict
 
 Simulador inteligente de orçamento e previsão de gastos em cloud baseado em boas práticas FinOps. Ideal para empresas que desejam prever custos, planejar cenários e acompanhar a evolução dos investimentos em nuvem de forma prática e visual.
 
@@ -43,7 +43,7 @@ streamlit run app.py
 
 Acesse a versão online (caso publicada):
 
-👉 [Abrir FinOpsPredict Pro no Streamlit](https://finops-predict-gfbarros.streamlit.app/)
+👉 [Abrir FinOpsPredict no Streamlit](https://finops-predict-gfbarros.streamlit.app/)
 
 ---
 
@@ -67,7 +67,7 @@ finops_predict/
 Desenvolvido por **Gustavo Barros**  
 Especialista em Infraestrutura FinOps na Midway (Grupo Guararapes/Riachuelo)  
 🔗 [LinkedIn](https://www.linkedin.com/in/gfbarros)  
-📧 contato: [insira seu e-mail profissional aqui]
+📧 contato: [gfbarros@msn.com]
 
 ---
 
