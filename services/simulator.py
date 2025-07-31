@@ -1,4 +1,3 @@
-
 # services/simulator.py
 
 import pandas as pd
