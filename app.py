@@ -24,13 +24,13 @@ monthly_growth_rate = round(growth_rate_total / 12, 4)
 if "projects" not in st.session_state:
     st.session_state.projects = []
 
-# Inicializa variável para exclusão, se não existir
-if "delete_idx" not in st.session_state:
-    st.session_state.delete_idx = None
+# Inicializa flag para deletar, se não existir
+if "delete_project_idx" not in st.session_state:
+    st.session_state.delete_project_idx = None
 
-# Função para deletar projeto (deve ser chamada no botão)
-def delete_project(idx):
-    st.session_state.delete_idx = idx
+# Função para agendar exclusão
+def schedule_delete(idx):
+    st.session_state.delete_project_idx = idx
 
 # Sidebar - Projetos
 st.sidebar.header("📌 Dados dos Projetos")
@@ -46,16 +46,24 @@ with st.sidebar.form("project_form", clear_on_submit=False):
     end_year_proj = st.number_input("Ano de Fim", value=2025, step=1, key="end_year_proj")
     submitted = st.form_submit_button("➕ Adicionar Projeto")
 
-if submitted:
-    if name and cost > 0:
-        st.session_state.projects.append({
-            "name": name,
-            "monthly_cost": cost,
-            "start_month": start_month_proj,
-            "start_year": start_year_proj,
-            "end_month": end_month_proj,
-            "end_year": end_year_proj
-        })
+if submitted and name and cost > 0:
+    st.session_state.projects.append({
+        "name": name,
+        "monthly_cost": cost,
+        "start_month": start_month_proj,
+        "start_year": start_year_proj,
+        "end_month": end_month_proj,
+        "end_year": end_year_proj
+    })
+
+# Se houver exclusão agendada, executa aqui
+if st.session_state.delete_project_idx is not None:
+    idx_to_del = st.session_state.delete_project_idx
+    if 0 <= idx_to_del < len(st.session_state.projects):
+        st.session_state.projects.pop(idx_to_del)
+    st.session_state.delete_project_idx = None
+    # Importante: força o rerun, mas isolado fora do loop de renderização
+    st.experimental_rerun()
 
 # Ver projetos adicionados
 with st.sidebar.expander("📂 Ver Projetos Adicionados"):
@@ -67,20 +75,10 @@ with st.sidebar.expander("📂 Ver Projetos Adicionados"):
 📅 {proj['start_month']:02d}/{proj['start_year']} até {proj['end_month']:02d}/{proj['end_year']}"""
                 .replace(",", "v").replace(".", ",").replace("v", ".")
             )
-            # Aqui o botão chama a função via callback, não deleta direto
             if st.button("🗑️", key=f"delete_{idx}"):
-                delete_project(idx)
+                schedule_delete(idx)
     else:
         st.caption("Nenhum projeto adicionado.")
-
-# Exclusão fora do loop de renderização, só após o ciclo atual
-if st.session_state.delete_idx is not None:
-    try:
-        del st.session_state.projects[st.session_state.delete_idx]
-    except IndexError:
-        pass
-    st.session_state.delete_idx = None
-    st.experimental_rerun()
 
 # Simulação
 if st.sidebar.button("Simular Orçamento"):
