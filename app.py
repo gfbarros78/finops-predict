@@ -27,6 +27,9 @@ st.sidebar.header("📌 Dados dos Projetos")
 if "project_list" not in st.session_state:
     st.session_state.project_list = []
 
+if "index_to_remove" not in st.session_state:
+    st.session_state.index_to_remove = None
+
 with st.sidebar.form(key="project_form", clear_on_submit=False):
     name = st.text_input("Nome do Projeto", "Projeto X")
     cost = st.number_input("Custo Mensal (R$)", min_value=0.0, step=100.0, value=0.0, format="%.2f")
@@ -49,24 +52,28 @@ with st.sidebar.form(key="project_form", clear_on_submit=False):
             "end_year": end_year_proj
         })
 
-# Mostrar projetos adicionados SEM botão "Ver Projetos Adicionados"
+# Mostrar projetos adicionados diretamente
 st.sidebar.markdown("---")
 st.sidebar.subheader("📋 Projetos Adicionados")
-if st.session_state.project_list:
-    index_to_remove = None  # variável para armazenar o índice que será removido
 
+if st.session_state.project_list:
     for i, proj in enumerate(st.session_state.project_list):
         custo_formatado = f"R$ {proj['monthly_cost']:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
         proj_info = f"**{proj['name']}** | {custo_formatado} | {proj['start_month']}/{proj['start_year']} até {proj['end_month']}/{proj['end_year']}"
         cols = st.sidebar.columns([5, 1])
         cols[0].markdown(proj_info)
         if cols[1].button("🗑️", key=f"delete_{i}"):
-            index_to_remove = i
+            st.session_state.index_to_remove = i
+            st.experimental_rerun()
 
-    # Remoção fora do loop
-    if index_to_remove is not None:
-        st.session_state.project_list.pop(index_to_remove)
-        st.experimental_rerun()  # Atualiza a página para refletir a exclusão
+# Remoção do projeto após rerun
+if st.session_state.index_to_remove is not None:
+    index = st.session_state.index_to_remove
+    if 0 <= index < len(st.session_state.project_list):
+        st.session_state.project_list.pop(index)
+    st.session_state.index_to_remove = None
+    st.experimental_rerun()
+
 else:
     st.sidebar.write("Nenhum projeto adicionado.")
 
