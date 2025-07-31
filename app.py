@@ -49,20 +49,20 @@ with st.sidebar.form(key="project_form", clear_on_submit=False):
             "end_year": end_year_proj
         })
 
-# Mostrar projetos adicionados com botão para remover
-if st.sidebar.button("Ver Projetos Adicionados"):
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("📋 Projetos Adicionados")
+# Mostrar projetos adicionados SEM botão "Ver Projetos Adicionados"
+st.sidebar.markdown("---")
+st.sidebar.subheader("📋 Projetos Adicionados")
+if st.session_state.project_list:
     for i, proj in enumerate(st.session_state.project_list):
-        # Formata o custo para padrão brasileiro aqui
         custo_formatado = f"R$ {proj['monthly_cost']:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
         proj_info = f"**{proj['name']}** | {custo_formatado} | {proj['start_month']}/{proj['start_year']} até {proj['end_month']}/{proj['end_year']}"
-        
         cols = st.sidebar.columns([5, 1])
         cols[0].markdown(proj_info)
         if cols[1].button("🗑️", key=f"delete_{i}"):
             st.session_state.project_list.pop(i)
-            st.experimental_rerun()  # CORREÇÃO: usar experimental_rerun para recarregar a página
+            st.experimental_rerun()  # Atualiza a página para refletir a exclusão
+else:
+    st.sidebar.write("Nenhum projeto adicionado.")
 
 # Simulação
 if st.sidebar.button("Simular Orçamento"):
@@ -75,7 +75,7 @@ if st.sidebar.button("Simular Orçamento"):
         projects=st.session_state.project_list
     )
 
-    # 🔧 Tradução manual dos meses
+    # Tradução manual dos meses
     meses_pt = {
         "January": "Janeiro", "February": "Fevereiro", "March": "Março",
         "April": "Abril", "May": "Maio", "June": "Junho",
