@@ -25,6 +25,9 @@ monthly_growth_rate = round(growth_rate_total / 12, 4)
 if "projects" not in st.session_state:
     st.session_state.projects = []
 
+if "delete_index" not in st.session_state:
+    st.session_state.delete_index = None
+
 # Sidebar - Projetos
 st.sidebar.header("📌 Dados dos Projetos")
 with st.sidebar.form("project_form", clear_on_submit=False):
@@ -61,10 +64,18 @@ with st.sidebar.expander("📂 Ver Projetos Adicionados"):
                 .replace(",", "v").replace(".", ",").replace("v", ".")
             )
             if st.button("🗑️", key=f"delete_{idx}"):
-                del st.session_state.projects[idx]
-                st.experimental_rerun()
+                st.session_state.delete_index = idx
     else:
         st.caption("Nenhum projeto adicionado.")
+
+# Exclusão fora da renderização
+if st.session_state.delete_index is not None:
+    try:
+        del st.session_state.projects[st.session_state.delete_index]
+    except IndexError:
+        pass
+    st.session_state.delete_index = None
+    st.experimental_rerun()
 
 # Simulação
 if st.sidebar.button("Simular Orçamento"):
