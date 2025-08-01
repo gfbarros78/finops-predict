@@ -1,4 +1,5 @@
 # app.py
+
 import streamlit as st
 from services.simulator import simulate_budget
 from utils.csv_export import export_to_csv
@@ -8,22 +9,53 @@ import pandas as pd
 st.set_page_config(page_title="FinOpsPredict Pro", layout="wide")
 st.title("💰 FinOpsPredict Pro - Planejamento Orçamentário em Cloud")
 
-# Inicializa session state
-if "projetos" not in st.session_state:
-    st.session_state["projetos"] = []
+# Inicialização do estado
+if "projects" not in st.session_state:
+    st.session_state["projects"] = []
 
-if "project_name_input" not in st.session_state:
-    st.session_state["project_name_input"] = ""
+# Formulário dos Projetos
+st.sidebar.header("📌 Dados dos Projetos")
+with st.sidebar.form(key="project_form", clear_on_submit=False):
+    name = st.text_input("Nome do Projeto", key="project_name_input")
+    cost = st.number_input("Custo Mensal (R$)", min_value=0.0, step=100.0, format="%.2f", key="project_cost_input")
+    start_month_proj = st.selectbox("Mês de Início", list(range(1, 13)), index=0, key="start_month_input")
+    start_year_proj = st.number_input("Ano de Início", value=2025, step=1, key="start_year_input")
+    end_month_proj = st.selectbox("Mês de Fim", list(range(1, 13)), index=5, key="end_month_input")
+    end_year_proj = st.number_input("Ano de Fim", value=2025, step=1, key="end_year_input")
 
-if "project_cost_input" not in st.session_state:
-    st.session_state["project_cost_input"] = 0.0
+    if cost > 0:
+        cost_formatado = f"R$ {cost:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
+        st.markdown(f"Valor inserido: **{cost_formatado}**")
 
-# Função para resetar os campos
-def reset_fields():
-    st.session_state["project_name_input"] = ""
-    st.session_state["project_cost_input"] = 0.0
+    add_button = st.form_submit_button("➕ Adicionar Projeto")
+    if add_button and name and cost > 0:
+        novo_projeto = {
+            "name": name,
+            "monthly_cost": cost,
+            "start_month": start_month_proj,
+            "start_year": start_year_proj,
+            "end_month": end_month_proj,
+            "end_year": end_year_proj
+        }
+        st.session_state.projects.append(novo_projeto)
+        st.rerun()
 
-# Sidebar - Parâmetros do Forecast
+# Ver Projetos Adicionados
+st.sidebar.markdown("### 👀 Projetos Adicionados")
+for i, proj in enumerate(st.session_state.projects):
+    col1, col2 = st.sidebar.columns([4, 1])
+    with col1:
+        st.markdown(
+            f"**{proj['name']}**\n\n"
+            f"💰 {proj['monthly_cost']:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".") + "\n\n"
+            f"🕒 {proj['start_month']}/{proj['start_year']} até {proj['end_month']}/{proj['end_year']}"
+        )
+    with col2:
+        if st.button("🗑️", key=f"delete_{i}"):
+            st.session_state.projects.pop(i)
+            st.rerun()
+
+# Parâmetros do Forecast
 st.sidebar.header("🔧 Parâmetros do Forecast")
 baseline_value = st.sidebar.number_input("Baseline em R$", min_value=0.0, step=100.0, value=0.0, format="%.2f")
 if baseline_value > 0:
@@ -36,51 +68,21 @@ growth_rate_total = st.sidebar.slider("Crescimento ou Redução (%) ao ano", -50
 duration_months = st.sidebar.slider("Duração (meses)", 3, 60, 12)
 monthly_growth_rate = round(growth_rate_total / 12, 4)
 
-# Sidebar - Projetos
-st.sidebar.header("📌 Dados dos Projetos")
-st.sidebar.text_input("Nome do Projeto", key="project_name_input", placeholder="Ex: Projeto Alpha")
-st.sidebar.number_input("Custo Mensal (R$)", min_value=0.0, value=st.session_state["project_cost_input"], step=100.0, format="%.2f", key="project_cost_input")
-start_month_proj = st.sidebar.selectbox("Mês de Início - Projeto", list(range(1, 13)), index=0)
-start_year_proj = st.sidebar.number_input("Ano de Início - Projeto", value=2025, step=1, key="start_year_proj")
-end_month_proj = st.sidebar.selectbox("Mês de Fim - Projeto", list(range(1, 13)), index=5)
-end_year_proj = st.sidebar.number_input("Ano de Fim - Projeto", value=2025, step=1, key="end_year_proj")
-
-if st.sidebar.button("➕ Adicionar Projeto"):
-    if st.session_state["project_name_input"]:
-        st.session_state["projetos"].append({
-            "name": st.session_state["project_name_input"],
-            "monthly_cost": st.session_state["project_cost_input"],
-            "start_month": start_month_proj,
-            "start_year": start_year_proj,
-            "end_month": end_month_proj,
-            "end_year": end_year_proj
-        })
-        reset_fields()
-
-# Exibição dos projetos adicionados
-with st.sidebar.expander("📁 Ver Projetos Adicionados", expanded=False):
-    if st.session_state["projetos"]:
-        for i, proj in enumerate(st.session_state["projetos"]):
-            col1, col2 = st.columns([0.9, 0.1])
-            with col1:
-                valor_formatado = f"R$ {proj['monthly_cost']:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
-                st.markdown(f"**{proj['name']}**  \n{valor_formatado} - {proj['start_month']}/{proj['start_year']} até {proj['end_month']}/{proj['end_year']}")
-            with col2:
-                if st.button("🗑️", key=f"delete_{i}"):
-                    st.session_state["projetos"].pop(i)
-                    st.experimental_rerun()
-    else:
-        st.info("Nenhum projeto adicionado.")
-
 # Simulação
-if st.sidebar.button("📊 Simular Orçamento"):
+if st.sidebar.button("📈 Simular Orçamento"):
     df = simulate_budget(
         baseline_cost=baseline_value,
         monthly_growth_rate=monthly_growth_rate,
         start_month=start_month,
         start_year=start_year,
         duration_months=duration_months,
-        projects=st.session_state["projetos"]
+        projects=st.session_state.projects
+    )
+
+    # Exibir resultado formatado
+    df_exibicao = df.copy()
+    df_exibicao["Custo Previsto (R$)"] = df_exibicao["Custo Previsto (R$)"].apply(
+        lambda x: f"R$ {x:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
     )
 
     meses_pt = {
@@ -89,11 +91,6 @@ if st.sidebar.button("📊 Simular Orçamento"):
         "July": "Julho", "August": "Agosto", "September": "Setembro",
         "October": "Outubro", "November": "Novembro", "December": "Dezembro"
     }
-
-    df_exibicao = df.copy()
-    df_exibicao["Custo Previsto (R$)"] = df_exibicao["Custo Previsto (R$)"].apply(
-        lambda x: f"R$ {x:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
-    )
     df_exibicao["Mês"] = pd.to_datetime(df_exibicao["Data"], format="%m-%Y").dt.month_name().map(meses_pt)
 
     st.subheader("📊 Resultado da Simulação")
