@@ -1,14 +1,14 @@
 # app.py
 import streamlit as st
-import pandas as pd
 from services.simulator import simulate_budget
 from utils.csv_export import export_to_csv
 from utils.charts import plot_budget_line_chart, plot_budget_pie_chart
+import pandas as pd
 
 st.set_page_config(page_title="FinOpsPredict Pro", layout="wide")
 st.title("💰 FinOpsPredict Pro - Planejamento Orçamentário em Cloud")
 
-# Parâmetros do Forecast
+# Sidebar - Parâmetros do Forecast
 st.sidebar.header("🔧 Parâmetros do Forecast")
 baseline_value = st.sidebar.number_input("Baseline em R$", min_value=0.0, step=100.0, value=0.0, format="%.2f")
 if baseline_value > 0:
@@ -21,48 +21,46 @@ growth_rate_total = st.sidebar.slider("Crescimento ou Redução (%) ao ano", -50
 duration_months = st.sidebar.slider("Duração (meses)", 3, 60, 12)
 monthly_growth_rate = round(growth_rate_total / 12, 4)
 
-# Dados dos Projetos
+# Sidebar - Projetos
 st.sidebar.header("📌 Dados dos Projetos")
-if "project_list" not in st.session_state:
-    st.session_state["project_list"] = []
+if "projects" not in st.session_state:
+    st.session_state["projects"] = []
 
-with st.sidebar.form("project_form", clear_on_submit=True):
-    name = st.text_input("Nome do Projeto", key="project_name", placeholder="Nome do Projeto")
-    cost = st.number_input("Custo Mensal (R$)", value=0.0, step=1000.0, format="%.2f", key="project_cost")
+with st.sidebar.form(key="add_project_form", clear_on_submit=True):
+    name = st.text_input("Nome do Projeto", value="", placeholder="Digite o nome do projeto")
+    cost = st.number_input("Custo Mensal (R$)", min_value=0.0, step=100.0, format="%.2f", value=0.0)
     if cost > 0:
         cost_formatado = f"R$ {cost:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
         st.markdown(f"Valor inserido: **{cost_formatado}**")
-    start_month_proj = st.selectbox("Mês de Início", list(range(1, 13)), index=2, key="start_month_proj")
-    start_year_proj = st.number_input("Ano de Início", value=2025, step=1, key="start_year_proj")
-    end_month_proj = st.selectbox("Mês de Fim", list(range(1, 13)), index=5, key="end_month_proj")
-    end_year_proj = st.number_input("Ano de Fim", value=2025, step=1, key="end_year_proj")
+    start_month_proj = st.selectbox("Mês de Início", list(range(1, 13)), index=2)
+    start_year_proj = st.number_input("Ano de Início", value=2025, step=1)
+    end_month_proj = st.selectbox("Mês de Fim", list(range(1, 13)), index=5)
+    end_year_proj = st.number_input("Ano de Fim", value=2025, step=1)
+    submitted = st.form_submit_button("+ Adicionar Projeto")
 
-    submit = st.form_submit_button("+ Adicionar Projeto")
-    if submit and name and cost > 0:
-        st.session_state["project_list"].append({
-            "name": name,
-            "monthly_cost": cost,
-            "start_month": start_month_proj,
-            "start_year": start_year_proj,
-            "end_month": end_month_proj,
-            "end_year": end_year_proj
-        })
+if submitted and name and cost > 0:
+    st.session_state.projects.append({
+        "name": name,
+        "monthly_cost": cost,
+        "start_month": start_month_proj,
+        "start_year": start_year_proj,
+        "end_month": end_month_proj,
+        "end_year": end_year_proj
+    })
 
-# Exibir projetos adicionados
-if st.sidebar.button("📂 Ver Projetos Adicionados"):
-    if st.session_state["project_list"]:
-        st.sidebar.markdown("### Projetos Adicionados")
-        for i, proj in enumerate(st.session_state["project_list"]):
-            st.sidebar.markdown(
-                f"**{proj['name']}**\n\n"
-                f"💸 {proj['monthly_cost']:,.2f} R$\n\n"
-                f"🗓️ {proj['start_month']}/{proj['start_year']} até {proj['end_month']}/{proj['end_year']}"
-            )
-            if st.sidebar.button("🗑️ Excluir", key=f"delete_{i}"):
-                st.session_state["project_list"].pop(i)
-                st.experimental_rerun()
-    else:
-        st.sidebar.info("Nenhum projeto adicionado ainda.")
+# Ver Projetos Adicionados
+if st.sidebar.checkbox("Ver Projetos Adicionados"):
+    st.sidebar.markdown("### Projetos Adicionados:")
+    for i, proj in enumerate(st.session_state.projects):
+        st.sidebar.markdown(
+            f"**{proj['name']}**\n\n"
+            f"- Custo: R$ {proj['monthly_cost']:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".") + "\n"
+            f"- Início: {proj['start_month']}/{proj['start_year']}\n"
+            f"- Fim: {proj['end_month']}/{proj['end_year']}"
+        )
+        if st.sidebar.button("🗑️ Excluir", key=f"del_{i}"):
+            st.session_state.projects.pop(i)
+            st.experimental_rerun()
 
 # Simulação
 if st.sidebar.button("Simular Orçamento"):
@@ -72,10 +70,10 @@ if st.sidebar.button("Simular Orçamento"):
         start_month=start_month,
         start_year=start_year,
         duration_months=duration_months,
-        projects=st.session_state["project_list"]
+        projects=st.session_state.projects
     )
 
-    # Exibição com formatação
+    # Tradução dos meses
     meses_pt = {
         "January": "Janeiro", "February": "Fevereiro", "March": "Março",
         "April": "Abril", "May": "Maio", "June": "Junho",
@@ -93,3 +91,15 @@ if st.sidebar.button("Simular Orçamento"):
     st.dataframe(df_exibicao, use_container_width=True)
 
     st.download_button(
+        label="⬇️ Exportar CSV",
+        data=export_to_csv(df),
+        file_name="orcamento_cloud.csv",
+        mime="text/csv"
+    )
+
+    st.plotly_chart(plot_budget_line_chart(df), use_container_width=True)
+    st.plotly_chart(plot_budget_pie_chart(df), use_container_width=True)
+
+else:
+    st.info("Preencha os dados ao lado e clique em 'Simular Orçamento'.")
+    st.caption("Desenvolvido com ❤️ seguindo as práticas FinOps.")
