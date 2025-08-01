@@ -1,61 +1,56 @@
-# utils/charts.py
-import pandas as pd
 import plotly.express as px
+import pandas as pd
 
-def plot_budget_line_chart(df):
+def plot_budget_line_chart(df: pd.DataFrame):
     fig = px.line(
         df,
         x="Data",
         y="Custo Previsto (R$)",
         markers=True,
         title="Evolução do Custo Mensal Previsto",
+        hover_data={"Custo Previsto (R$)": ":,.0f"}
     )
+    fig.update_traces(line=dict(color="royalblue", width=3))
     fig.update_layout(
+        title_x=0.5,
+        yaxis_title="Custo (R$)",
         xaxis_title="Mês",
-        yaxis_title="Custo Previsto (R$)",
-        hovermode="x unified"
-    )
-    fig.update_traces(
-        hovertemplate="Mês: %{x}<br>Custo Previsto: R$ %{y:,.0f}<extra></extra>",
-        line=dict(color="#007bff", width=3),
-        marker=dict(size=8)
+        hoverlabel=dict(bgcolor="white", font_size=14),
     )
     return fig
 
-def plot_budget_pie_chart(df):
-    # Verifica se existe pelo menos um projeto ativo
+def plot_budget_pie_chart(df: pd.DataFrame):
     if "Projetos Ativos" not in df.columns:
-        return px.pie(values=[1], names=["Nenhum projeto"], title="Distribuição de Custo por Projeto")
+        return px.pie(title="Nenhum projeto adicionado.")
 
-    # Expande os projetos ativos separados por vírgula
+    # Expande a coluna de projetos para calcular o total por projeto
     expanded_rows = []
     for _, row in df.iterrows():
-        projetos = [p.strip() for p in row["Projetos Ativos"].split(",") if p.strip() and p.strip() != "Nenhum"]
+        projetos = [p.strip() for p in row["Projetos Ativos"].split(",")] if row["Projetos Ativos"] != "Nenhum" else []
+        valor = row["Custo Previsto (R$)"]
         if projetos:
-            custo_por_projeto = row["Custo Previsto (R$)"] / len(projetos)
+            valor_por_projeto = valor / len(projetos)
             for projeto in projetos:
                 expanded_rows.append({
                     "Projeto": projeto,
-                    "Custo Previsto (R$)": custo_por_projeto
+                    "Custo Previsto (R$)": valor_por_projeto
                 })
 
-    # Se nenhum projeto foi adicionado
     if not expanded_rows:
-        return px.pie(values=[1], names=["Nenhum projeto"], title="Distribuição de Custo por Projeto")
+        return px.pie(title="Nenhum projeto com custo atribuído.")
 
     df_expandido = pd.DataFrame(expanded_rows)
     df_grouped = df_expandido.groupby("Projeto")["Custo Previsto (R$)"].sum().reset_index()
-    df_grouped = df_grouped.sort_values(by="Custo Previsto (R$)", ascending=False)
+
+    df_grouped["Custo Previsto (R$)"] = df_grouped["Custo Previsto (R$)"].apply(
+        lambda x: round(x)
+    )
 
     fig = px.pie(
         df_grouped,
-        values="Custo Previsto (R$)",
         names="Projeto",
-        title="Distribuição de Custo por Projeto",
-        hole=0.4
+        values="Custo Previsto (R$)",
+        title="Distribuição de Custos por Projeto"
     )
-    fig.update_traces(
-        textinfo="percent+label",
-        hovertemplate="Projeto: %{label}<br>Custo: R$ %{value:,.0f}<extra></extra>",
-    )
+    fig.update_layout(title_x=0.5)
     return fig
