@@ -11,6 +11,10 @@ st.title("💰 FinOpsPredict Pro - Planejamento Orçamentário em Cloud")
 # Inicializa sessão
 if "projects" not in st.session_state:
     st.session_state["projects"] = []
+if "project_name" not in st.session_state:
+    st.session_state["project_name"] = ""
+if "project_cost" not in st.session_state:
+    st.session_state["project_cost"] = 0.0
 
 # 🔧 Parâmetros do Forecast
 st.sidebar.header("🔧 Parâmetros do Forecast")
@@ -27,18 +31,23 @@ monthly_growth_rate = round(growth_rate_total / 12, 4)
 
 # 📌 Dados dos Projetos
 st.sidebar.header("📌 Dados dos Projetos")
-with st.sidebar.form(key="project_form", clear_on_submit=False):
-    project_name = st.text_input("Nome do Projeto", key="project_name", placeholder="Pressione Enter para aplicar")
-    project_cost = st.number_input("Custo Mensal (R$)", min_value=0.0, step=100.0, format="%.2f", key="project_cost")
-    if project_cost > 0:
-        cost_formatado = f"R$ {project_cost:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
-        st.markdown(f"Valor inserido: **{cost_formatado}**")
+
+# Campos fora do form para ter "Press Enter to apply"
+project_name = st.sidebar.text_input("Nome do Projeto", value=st.session_state["project_name"], key="project_name")
+project_cost = st.sidebar.number_input("Custo Mensal (R$)", min_value=0.0, step=100.0, format="%.2f", key="project_cost")
+if project_cost > 0:
+    cost_formatado = f"R$ {project_cost:,.2f}".replace(",", "v").replace(".", ",").replace("v", ".")
+    st.sidebar.markdown(f"Valor inserido: **{cost_formatado}**")
+
+# Campos adicionais (estes podem ficar no form)
+with st.sidebar.form(key="project_form"):
     start_month_proj = st.selectbox("Mês de Início", list(range(1, 13)), index=0, key="start_month_proj")
     start_year_proj = st.number_input("Ano de Início", value=2025, step=1, key="start_year_proj")
     end_month_proj = st.selectbox("Mês de Término", list(range(1, 13)), index=11, key="end_month_proj")
     end_year_proj = st.number_input("Ano de Término", value=2025, step=1, key="end_year_proj")
 
     submit_button = st.form_submit_button("➕ Adicionar Projeto")
+
     if submit_button and project_name.strip() != "":
         novo_projeto = {
             "name": project_name.strip(),
@@ -49,9 +58,10 @@ with st.sidebar.form(key="project_form", clear_on_submit=False):
             "end_year": end_year_proj
         }
         st.session_state["projects"].append(novo_projeto)
-        # Limpa campos
+        # Limpa campos controlados
         st.session_state["project_name"] = ""
         st.session_state["project_cost"] = 0.0
+        st.experimental_rerun()
 
 # Mostrar projetos adicionados
 if st.sidebar.checkbox("👁 Ver Projetos Adicionados", value=True):
@@ -69,7 +79,7 @@ if st.sidebar.checkbox("👁 Ver Projetos Adicionados", value=True):
                 st.session_state["delete_project_index"] = idx
                 st.experimental_rerun()
 
-# Excluir projeto de forma segura após o loop
+# Excluir projeto após loop
 if "delete_project_index" in st.session_state:
     idx_to_delete = st.session_state.pop("delete_project_index")
     if 0 <= idx_to_delete < len(st.session_state["projects"]):
@@ -87,7 +97,6 @@ if st.sidebar.button("📊 Simular Orçamento"):
         projects=st.session_state["projects"]
     )
 
-    # 🔧 Tradução manual dos meses
     meses_pt = {
         "January": "Janeiro", "February": "Fevereiro", "March": "Março",
         "April": "Abril", "May": "Maio", "June": "Junho",
